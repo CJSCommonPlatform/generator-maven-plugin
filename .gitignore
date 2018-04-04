@@ -17,6 +17,7 @@ bower_components/
 pom.xml~
 .gitignore~
 activemq-data/
+*.puml
 
 ### SublimeText ###
 # cache files for sublime text
