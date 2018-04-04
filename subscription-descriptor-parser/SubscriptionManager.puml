@@ -1,0 +1,17 @@
+@startuml
+SubscriptionManager -> GetEventsTask: createTask
+GetEventsTask -> SubscriptionService: getLastProcessedPosition()
+GetEventsTask <- SubscriptionService: lastProcessedPosition
+
+GetEventsTask -> EventSource: getAllEventsFrom(position)
+GetEventsTask <- EventSource: Stream<Event>
+
+loop eventStream.size() times
+         GetEventsTask      -> EventProcessor: processEvent
+         EventProcessor     -> EventBufferService: currentOrderedEventsWith(event)
+         EventProcessor <- EventBufferService: Stream<Event>
+         loop foreach event
+              EventProcessor -> InterceptorChain: process
+         end
+end
+@enduml
