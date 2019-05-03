@@ -5,6 +5,12 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## Unreleased
 
+## [2.6.3] - 2019-05-03
+
+### Changed
+- Updated common-bom version to 2.0.2
+
+
 ## [2.6.2] - 2019-02-01
 
 ### Changed
