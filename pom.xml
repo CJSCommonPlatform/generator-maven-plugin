@@ -25,10 +25,13 @@
         <module>generator-maven-test-utils</module>
         <module>schema-parser</module>
         <module>parser-common</module>
+        <module>unifiedsearch-descriptor-parser</module>
+
     </modules>
 
     <properties>
         <common-bom.version>2.0.2</common-bom.version>
+        <utilities.version>1.18.0</utilities.version>
         <cpp.repo.name>generator-maven-plugin</cpp.repo.name>
         <useSourcePathAndClassPath>false</useSourcePathAndClassPath>
         <useClassPath>false</useClassPath>
