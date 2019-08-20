@@ -5,7 +5,6 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Predicates.or;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
@@ -29,51 +28,38 @@ import org.reflections.util.ConfigurationBuilder;
  */
 public class FileTreeScanner {
 
-    private static final String CLASSPATH = "CLASSPATH";
     private static final String RAML_PATTERN = "**/*.raml";
 
     /**
      * Finding all files within a directory that fulfil a set of include and exclude patterns, using standard
      * Ant patterns - {@see http://ant.apache.org/manual/dirtasks.html#patterns}.
      *
-     * @param baseDir  the path to search under
+     * @param urlsToScan  Either the base directory or a list of URLs from the classpath
      * @param includes the path patterns to include
      * @param excludes the path patterns to exclude
      * @return a list of paths to matching files under the specified directory
      */
-    public Collection<Path> find(final Path baseDir, final String[] includes, final String[] excludes) throws IOException {
-        if (!shouldSearchOnClasspath(baseDir) && !baseDir.toFile().exists()) {
-            return emptyList();
-        }
+    public Collection<Path> find(final List<URL> urlsToScan, final String[] includes, final String[] excludes) throws IOException {
+        
+        final ConfigurationBuilder configuration = new ConfigurationBuilder()
+                .filterInputsBy(filterOf(includes, excludes))
+                .setUrls(urlsToScan)
+                .setScanners(new ResourcesScanner());
 
-        final Reflections reflections = new Reflections(
-                new ConfigurationBuilder()
-                        .filterInputsBy(filterOf(includes, excludes))
-                        .setUrls(urlsToScan(baseDir))
-                        .setScanners(new ResourcesScanner()));
-        Set<String> resources = reflections.getResources(Pattern.compile(".*"));
+        final Reflections reflections = new Reflections(configuration);
+        final Set<String> resources = reflections.getResources(Pattern.compile(".*"));
 
         return resources.stream().map(Paths::get).collect(toList());
     }
 
-    private Collection<URL> urlsToScan(final Path baseDir) throws MalformedURLException {
-        return shouldSearchOnClasspath(baseDir)
-                ? ClasspathHelper.forClassLoader()
-                : asList(baseDir.toUri().toURL());
-    }
-
-    private boolean shouldSearchOnClasspath(final Path baseDir) {
-        return baseDir == null || baseDir.toString().contains(CLASSPATH);
-    }
-
     private Predicate<String> filterOf(final String[] includes, final String[] excludes) {
-        List<AntPathMatcher> includesMatcher = stream(includes).map(AntPathMatcher::new).collect(toList());
-        Predicate<String> includesFilter = notEmpty(includes)
+        final List<AntPathMatcher> includesMatcher = stream(includes).map(AntPathMatcher::new).collect(toList());
+        final Predicate<String> includesFilter = notEmpty(includes)
                 ? or(includesMatcher)
                 : new AntPathMatcher(RAML_PATTERN);
 
-        List<Predicate<String>> excludesMatcher = stream(excludes).map(i -> not(new AntPathMatcher(i))).collect(toList());
-        Predicate<String> excludesFilter = and(excludesMatcher);
+        final List<Predicate<String>> excludesMatcher = stream(excludes).map(i -> not(new AntPathMatcher(i))).collect(toList());
+        final Predicate<String> excludesFilter = and(excludesMatcher);
 
         return and(includesFilter, excludesFilter);
     }

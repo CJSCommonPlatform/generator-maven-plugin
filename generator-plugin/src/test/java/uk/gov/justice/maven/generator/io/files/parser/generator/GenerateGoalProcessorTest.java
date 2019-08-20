@@ -20,9 +20,11 @@ import uk.gov.justice.maven.generator.io.files.parser.core.Generator;
 import uk.gov.justice.maven.generator.io.files.parser.core.GeneratorConfig;
 import uk.gov.justice.maven.generator.io.files.parser.io.FileTreeScanner;
 import uk.gov.justice.maven.generator.io.files.parser.io.FileTreeScannerFactory;
+import uk.gov.justice.maven.generator.io.files.parser.io.UrlsToScanFinder;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,7 +90,9 @@ public class GenerateGoalProcessorTest {
         File ramlFile2 = sourceDirectory.newFile("file2.raml");
         String ramlString2 = "#%RAML 0.8\nbaseUri: \"http://b:8080/\"\n";
         write(ramlFile2, ramlString2);
-        when(scanner.find(sourceDirectory.getRoot().toPath(), includes, excludes))
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(sourceDirectory.getRoot().toPath());
+
+        when(scanner.find(urlsToScan, includes, excludes))
                 .thenReturn(asList(ramlFile.toPath(), ramlFile2.toPath()));
 
         generateGoalProcessor.generate(config);
@@ -115,7 +119,8 @@ public class GenerateGoalProcessorTest {
     public void shouldCallGeneratorWithEmptyRamlForEmptyFile() throws Exception {
         File ramlFile = sourceDirectory.newFile("file3.raml");
 
-        when(scanner.find(sourceDirectory.getRoot().toPath(), includes, excludes))
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(sourceDirectory.getRoot().toPath());
+        when(scanner.find(urlsToScan, includes, excludes))
                 .thenReturn(singletonList(ramlFile.toPath()));
 
         generateGoalProcessor.generate(config);
@@ -143,7 +148,8 @@ public class GenerateGoalProcessorTest {
         String ramlString1 = "#%RAML 0.8\nbaseUri: \"http://c:8080/\"\n";
         write(ramlFile, ramlString1);
 
-        when(scanner.find(sourceDirectory.getRoot().toPath(), customIncludes, customExcludes))
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(sourceDirectory.getRoot().toPath());
+        when(scanner.find(urlsToScan, customIncludes, customExcludes))
                 .thenReturn(singletonList(ramlFile.toPath()));
 
         generateGoalProcessor.generate(config);
@@ -158,9 +164,9 @@ public class GenerateGoalProcessorTest {
     }
 
     @Test
-    public void shouldNotInstatiateGeneratorIfNoRamlFilesToProcess() throws IOException {
+    public void shouldNotInstantiateGeneratorIfNoRamlFilesToProcess() throws IOException {
 
-        when(scanner.find(any(Path.class), any(String[].class), any(String[].class))).thenReturn(emptyList());
+        when(scanner.find(any(List.class), any(String[].class), any(String[].class))).thenReturn(emptyList());
         generateGoalProcessor.generate(config);
 
         verifyZeroInteractions(mojoGeneratorFactory);

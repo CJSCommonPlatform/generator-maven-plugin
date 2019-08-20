@@ -6,9 +6,13 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -21,13 +25,14 @@ public class FileTreeScannerTest {
     @SuppressWarnings("unchecked")
     public void shouldFindMatchingFilesInBaseDir() throws Exception {
 
-        String[] includes = {"**/*.raml"};
-        String[] excludes = {"**/*ignore.raml"};
-        Path baseDir = Paths.get("src/test/resources/raml/");
+        final String[] includes = {"**/*.raml"};
+        final String[] excludes = {"**/*ignore.raml"};
+        final Path baseDir = Paths.get(getRamlDirectory());
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(baseDir);
 
-        FileTreeScanner fileTreeResolver = new FileTreeScanner();
+        final FileTreeScanner fileTreeResolver = new FileTreeScanner();
 
-        Collection<Path> paths = fileTreeResolver.find(baseDir, includes, excludes);
+        final Collection<Path> paths = fileTreeResolver.find(urlsToScan, includes, excludes);
 
         assertThat(paths, hasSize(3));
         assertThat(paths, containsInAnyOrder(
@@ -40,13 +45,14 @@ public class FileTreeScannerTest {
     @SuppressWarnings("unchecked")
     public void shouldFindMatchingFilesInClasspathIfBaseDirSetToCLASSPATH() throws Exception {
 
-        String[] includes = {"**/*.raml"};
-        String[] excludes = {"**/*ignore.raml"};
-        Path baseDir = Paths.get("CLASSPATH");
+        final String[] includes = {"**/*.raml"};
+        final String[] excludes = {"**/*ignore.raml"};
+        final Path baseDir = Paths.get("CLASSPATH");
 
-        FileTreeScanner fileTreeResolver = new FileTreeScanner();
+        final FileTreeScanner fileTreeResolver = new FileTreeScanner();
 
-        Collection<Path> paths = fileTreeResolver.find(baseDir, includes, excludes);
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(baseDir);
+        final Collection<Path> paths = fileTreeResolver.find(urlsToScan, includes, excludes);
 
         assertThat(paths, containsInAnyOrder(
                 equalTo(Paths.get("raml/external-3.raml")),
@@ -61,12 +67,12 @@ public class FileTreeScannerTest {
     @SuppressWarnings("unchecked")
     public void shouldFindMatchingFilesInClasspathIfBaseDirNULL() throws Exception {
 
-        String[] includes = {"**/*.raml"};
-        String[] excludes = {"**/*ignore.raml"};
+        final String[] includes = {"**/*.raml"};
+        final String[] excludes = {"**/*ignore.raml"};
 
-        FileTreeScanner fileTreeResolver = new FileTreeScanner();
-
-        Collection<Path> paths = fileTreeResolver.find(null, includes, excludes);
+        final FileTreeScanner fileTreeResolver = new FileTreeScanner();
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(null);
+        final Collection<Path> paths = fileTreeResolver.find(urlsToScan, includes, excludes);
 
         assertThat(paths, hasSize(5));
         assertThat(paths, containsInAnyOrder(
@@ -82,13 +88,13 @@ public class FileTreeScannerTest {
     @SuppressWarnings("unchecked")
     public void shouldIncludeMultipleFiles() throws Exception {
 
-        String[] includes = {"**/*example-1.raml", "**/*example-2.raml"};
-        String[] excludes = {};
-        Path baseDir = Paths.get("src/test/resources/raml/");
+        final String[] includes = {"**/*example-1.raml", "**/*example-2.raml"};
+        final String[] excludes = {};
 
-        FileTreeScanner fileTreeResolver = new FileTreeScanner();
-
-        Collection<Path> paths = fileTreeResolver.find(baseDir, includes, excludes);
+        final Path baseDir = Paths.get(getRamlDirectory());
+        final FileTreeScanner fileTreeResolver = new FileTreeScanner();
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(baseDir);
+        final Collection<Path> paths = fileTreeResolver.find(urlsToScan, includes, excludes);
 
         assertThat(paths, hasSize(2));
         assertThat(paths, containsInAnyOrder(
@@ -100,13 +106,15 @@ public class FileTreeScannerTest {
     @SuppressWarnings("unchecked")
     public void shouldIncludeRamlFilesByDefaultIfNoIncludesSpecified() throws Exception {
 
-        String[] includes = {};
-        String[] excludes = {};
-        Path baseDir = Paths.get("src/test/resources/raml/");
+        final String[] includes = {};
+        final String[] excludes = {};
 
-        FileTreeScanner fileTreeResolver = new FileTreeScanner();
+        final Path baseDir = Paths.get(getRamlDirectory());
 
-        Collection<Path> paths = fileTreeResolver.find(baseDir, includes, excludes);
+        final FileTreeScanner fileTreeResolver = new FileTreeScanner();
+
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(baseDir);
+        final Collection<Path> paths = fileTreeResolver.find(urlsToScan, includes, excludes);
 
         assertThat(paths, hasSize(4));
         assertThat(paths, containsInAnyOrder(
@@ -121,13 +129,14 @@ public class FileTreeScannerTest {
     @SuppressWarnings("unchecked")
     public void shouldExcludeMultipleFiles() throws Exception {
 
-        String[] includes = {"**/*raml"};
-        String[] excludes = {"**/*ignore.raml", "**/*example-2.raml"};
-        Path baseDir = Paths.get("src/test/resources/raml/");
+        final String[] includes = {"**/*raml"};
+        final String[] excludes = {"**/*ignore.raml", "**/*example-2.raml"};
+        final Path baseDir = Paths.get(getRamlDirectory());
 
-        FileTreeScanner fileTreeResolver = new FileTreeScanner();
+        final FileTreeScanner fileTreeResolver = new FileTreeScanner();
 
-        Collection<Path> paths = fileTreeResolver.find(baseDir, includes, excludes);
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(baseDir);
+        final Collection<Path> paths = fileTreeResolver.find(urlsToScan, includes, excludes);
 
         assertThat(paths, hasSize(2));
         assertThat(paths, containsInAnyOrder(
@@ -139,16 +148,18 @@ public class FileTreeScannerTest {
     @SuppressWarnings("unchecked")
     public void shouldReturnEmptyCollectionIfBaseDirDoesNotExist() throws Exception {
 
-        String[] includes = {"**/*.messaging.raml"};
-        String[] excludes = {"**/*external-ignore.raml"};
-        Path baseDir = Paths.get("C:\\workspace-moj\\raml-maven\\raml-maven-plugin-it\\src\\raml");
+        final String[] includes = {"**/*.messaging.raml"};
+        final String[] excludes = {"**/*external-ignore.raml"};
+        final Path baseDir = Paths.get("C:\\workspace-moj\\raml-maven\\raml-maven-plugin-it\\src\\raml");
 
-        FileTreeScanner fileTreeResolver = new FileTreeScanner();
-
-        Collection<Path> paths = fileTreeResolver.find(baseDir, includes, excludes);
+        final FileTreeScanner fileTreeResolver = new FileTreeScanner();
+        final List<URL> urlsToScan = new UrlsToScanFinder().urlsToScan(baseDir);
+        final Collection<Path> paths = fileTreeResolver.find(urlsToScan, includes, excludes);
 
         assertThat(paths, empty());
     }
 
-
+    private URI getRamlDirectory() throws URISyntaxException {
+        return getClass().getClassLoader().getResource("raml").toURI();
+    }
 }
