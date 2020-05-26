@@ -1,6 +1,6 @@
 # Generator Maven Plugin
 
-##Deprecated
+## Deprecated
 
 _**This project has moved to be a sub-project of [Framework Libraries](https://github.com/CJSCommonPlatform/framework-libraries) and is located [here](https://github.com/CJSCommonPlatform/framework-libraries/blob/master/generator-maven-plugin/README.md)**_
 
